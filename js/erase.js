@@ -8,6 +8,7 @@
 	var Erase = function(elements, options) {
 		this.$elements = $(elements);
 		this.options = options;
+		this.timer = null;
 		this.init();
 	}
 	Erase.VERSION = '1.0.0';
@@ -33,15 +34,8 @@
 	}
 
 	Erase.prototype.init = function() {
-		this.initNodes();
-		this.reset();
-		this.initEvents();
-	}
-	Erase.prototype.initNodes = function() {
 		//test for HTML5 canvas
 		var test = document.createElement('canvas');
-		var _width = this.$elements.width();
-		var _height = this.$elements.height();
 		if (!test.getContext) {
 			this.elements.html("Browser does not support HTML5 canvas, please upgrade to a more modern browser.");
 			return false;
@@ -49,8 +43,6 @@
 		this.$elements.html('<div><p></p><canvas></canvas>');
 		this.sp = this.$elements.find('div');
 		this.sp.css({
-			width: _width,
-			height: _height,
 			position: 'relative',
 			cursor: this.options.cursor
 		});
@@ -63,8 +55,6 @@
 			zIndex: 2
 		});
 		this.canvas = this.$canvas[0];
-		this.canvas.width = _width;
-		this.canvas.height = _height;
 		this.ctx = this.canvas.getContext('2d');
 		this.$text = this.$elements.find('p');
 		this.$text.addClass(this.options.cls).css({
@@ -76,6 +66,50 @@
 			zIndex: 1
 		});
 		this.offset = this.$canvas.offset();
+		this.initSize();
+		this.initNodes();
+		this.reset();
+		this.initEvents();
+	}
+	Erase.prototype.initNodes = function() {
+		var _width = this._width;
+		var _height = this._height;
+		this.sp.css({
+			width: _width,
+			height: _height
+		});
+		this.canvas.width = _width;
+		this.canvas.height = _height;
+		this.pixels = _width * _height;
+	}
+	Erase.prototype.initActive = function(imagePath) {
+		var bg = this.options.background;
+		var mask = this.options.mask;
+		this.ctx.globalAlpha = this.options.opacity;
+		if (mask.type == 'image') {
+			this.drawImage(mask.path);
+			if (bg.type == 'image') {
+				this.setBgImage(bg.path);
+				this.$text.css('display', 'none');
+			} else {
+				this.$text.css('display', 'block').html(bg.path);
+			}
+		} else if (mask.type == 'color') {
+			if (bg.type == 'image') {
+				this.setBgImage(bg.path);
+				this.$text.css('display', 'none');
+			} else {
+				this.$text.css('display', 'block').html(bg.path);
+			}
+			this.ctx.fillStyle = mask.path;
+			this.ctx.beginPath();
+			this.ctx.rect(0, 0, this._width, this._height);
+			this.ctx.fill();
+		}
+	}
+	Erase.prototype.initSize = function() {
+		this._width = this.$elements.width();
+		this._height = this.$elements.height();
 	}
 	Erase.prototype.setBgImage = function(imagePath) {
 		this.sp.css({
@@ -96,39 +130,11 @@
 			that.ctx.drawImage(img, 0, 0, _w, _h, 0, 0, w, h);
 		}
 	}
-	Erase.prototype.initActive = function() {
-		var _width = this.canvas.width;
-		var _height = this.canvas.height;
-		this.pixels = _width * _height;
-		var bg = this.options.background;
-		var mask = this.options.mask;
-		if (mask.type == 'image') {
-			this.ctx.globalAlpha = this.options.opacity;
-			this.drawImage(mask.path);
-			if (bg.type == 'image') {
-				this.setBgImage(bg.path);
-				this.$text.css('display', 'none');
-			} else {
-				this.$text.css('display', 'block').html(bg.path);
-			}
-		} else if (mask.type == 'color') {
-			if (bg.type == 'image') {
-				this.setBgImage(bg.path);
-				this.$text.css('display', 'none');
-			} else {
-				this.$text.css('display', 'block').html(bg.path);
-			}
-			this.ctx.globalAlpha = this.options.opacity;
-			this.ctx.fillStyle = mask.path;
-			this.ctx.beginPath();
-			this.ctx.rect(0, 0, _width, _height);
-			this.ctx.fill();
-		}
-	}
 	Erase.prototype.initEvents = function() {
 		this.$canvas.on($.fn.mobileEvent.start, $.proxy(this._preDraw, this));
 		this.$canvas.on($.fn.mobileEvent.move, $.proxy(this._draw, this));
 		this.$canvas.on($.fn.mobileEvent.end, $.proxy(this._check, this));
+		$(window).on('resize', $.proxy(this._resize, this));
 	}
 	Erase.prototype.destroy = function() {
 		this.$canvas.off($.fn.mobileEvent.start);
@@ -144,6 +150,14 @@
 	}
 	Erase.prototype.clear = function() {
 		this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+	}
+	Erase.prototype._resize = function() {
+		clearTimeout(this.timer);
+		this.timer = setTimeout($.proxy(function(){
+			this.initSize();
+			this.initNodes();
+			this.initActive();
+		}, this), 400);
 	}
 	Erase.prototype._preDraw = function(event) {
 		if (!this.enabled) return;
