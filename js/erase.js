@@ -131,9 +131,9 @@
 		}
 	}
 	Erase.prototype.initEvents = function() {
-		this.$canvas.on($.fn.mobileEvent.start, $.proxy(this._preDraw, this));
-		this.$canvas.on($.fn.mobileEvent.move, $.proxy(this._draw, this));
-		this.$canvas.on($.fn.mobileEvent.end, $.proxy(this._check, this));
+		this.$canvas.on('touchstart mousedown', $.proxy(this._preDraw, this));
+		this.$canvas.on('touchmove mousemove', $.proxy(this._draw, this));
+		this.$canvas.on('touchend mouseup', $.proxy(this._check, this));
 		$(window).on('resize', $.proxy(this._resize, this));
 	}
 	Erase.prototype.destroy = function() {
@@ -157,7 +157,7 @@
 			this.initSize();
 			this.initNodes();
 			this.initActive();
-		}, this), 400);
+		}, this), 800);
 	}
 	Erase.prototype._preDraw = function(event) {
 		if (!this.enabled) return;
