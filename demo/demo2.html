@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<title>多个实例</title>
+		<style type="text/css">
+			* {
+				margin: 0;
+				padding: 0;
+			}
+			.example {
+				width: 90%;
+				height: 200px;
+				clear: both;
+				margin: 10px 5% 0;
+			}
+			.canvasText {
+				text-align: center;
+				font: 26px/200px "microsoft yahei";
+				background-color: #eee;
+			}
+			.p {
+				width: 90%;
+				height: 60px;
+				margin: 10px 5% 0;
+			}
+			.p button {
+				width: 47%;
+				float: left;
+				outline: none;
+				font-size: 20px;
+				height: 60px;
+				background: #333;
+				color: #fff;
+				line-height: 60px;
+				text-align: center;
+				border: none;
+				border-radius: 4px;
+				cursor: pointer;
+			}
+			.p button:nth-child(2) {
+				float: right;
+			}
+		</style>
+	</head>
+
+	<body>
+		<div id="example1" class="example"></div>
+		<p class="p">
+			<button class="reset" data-erase="1">reset</button>
+			<button class="clear" data-erase="1">clear</button>
+		</p>
+		<div id="example2" class="example"></div>
+		<p class="p">
+			<button class="reset" data-erase="2">reset</button>
+			<button class="clear" data-erase="2">clear</button>
+		</p>
+		<script src="../../lib/jquery-2.1.4.min.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../../lib/mobile.js" type="text/javascript" charset="utf-8"></script>
+		<script src="../js/erase.js" type="text/javascript" charset="utf-8"></script>
+		<script type="text/javascript">
+			$(document).ready(function() {
+				$(window).on('touchmove', function() {
+					return false;
+				})
+				var $example1 = $('#example1');
+				$example1.erase({
+					size: 50,
+					background: {
+						type: 'text',
+						path: '恭喜你中了一等奖'
+					},
+					mask: {
+						type: 'color',
+						path: '#555'
+					},
+					eraseMove: function(a) {
+						if (a > 50) {
+							this.clear();
+						}
+					}
+				});
+				var $example2 = $('#example2');
+				
+				$.fn.erase1 = $.fn.erase.noConflict();
+				
+				$example2.erase1({
+					size: 50,
+					background: {
+						type: 'image',
+						path: '../img/pic2.jpg'
+					},
+					mask: {
+						type: 'image',
+						path: '../img/pic4.jpg'
+					},
+					eraseMove: function(a) {
+						if (a > 50) {
+							this.clear();
+						}
+					}
+				});
+				$(document).on('click', 'button', function(e) {
+					var $target = $(e.target);
+					var erase = $('#example'+ $target.data('erase')).data('wui.erase');
+					if ($target.is('.reset') && erase) {
+						erase.reset();
+					} else if ($target.is('.clear') && erase) {
+						erase.clear();
+					}
+				})
+			})
+		</script>
+	</body>
+
+</html>
